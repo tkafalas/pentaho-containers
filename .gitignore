@@ -17,3 +17,6 @@ containers/pentaho-server/pentaho-server-8.3/predownloaded/*.bin
 kubernetes/pentaho-server/postgres-config/*
 kubernetes/pentaho-server/mssql*
 
+target/
+.idea/
+containers/local/installedLicenses.xml

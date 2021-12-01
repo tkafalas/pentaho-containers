@@ -1,14 +1,19 @@
-FROM openjdk:8-jre as install_unpack
+# This file is intended to be modified by the DockerPentahoServer.bat/sh command line
+# Define the installation path as a global (before the FROM clauses)
+ARG INSTALLATION_PATH=/opt/pentaho
+ARG JAVA_VERSION=openjdk:8-jre
+
+FROM ${JAVA_VERSION} as install_unpack
 
 WORKDIR /opt/pentaho-installer/
 
 #Arguments definition
-ARG INSTALLATION_PATH=/opt/pentaho
+ARG INSTALLATION_PATH
 ARG INSTALLER_PATH=/opt/pentaho-installer
 ## Arguments for regular Pentaho Server install
 ARG PENTAHO_INSTALLER_NAME=pentaho-server-ee
-ARG PENTAHO_VERSION=8.3.0.0
-ARG PENTAHO_PACKAGE_DIST=371
+ARG PENTAHO_VERSION=9.1.0.0
+ARG PENTAHO_PACKAGE_DIST=324
 ARG FILE_SOFTWARE=${PENTAHO_INSTALLER_NAME}-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}-dist.zip
 ARG FILE_RELEASE_NAME=${PENTAHO_INSTALLER_NAME}-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}
 ## Arguments related to Pentaho Server plugins
@@ -17,13 +22,12 @@ ARG FILE_PIR=pir-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}-dist.zip
 ARG FILE_PDD=pdd-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}-dist.zip
 
 ## Arguments required if SP is applied
-ARG SERVICE_PACK_VERSION=
-#ARG SERVICE_PACK_VERSION
-ARG SERVICE_PACK_DIST=
-ARG SERVICE_PACK_FILENAME=PentahoServer-SP-${SERVICE_PACK_VERSION}-${SERVICE_PACK_DIST}.bin
+ARG SERVICE_PACK_VERSION=9.1.0.7
+ARG SERVICE_PACK_DIST=567
+ARG SERVICE_PACK_FILENAME=
 
 #Copy from local predownloaded folder al the artifacts required for Pentaho installation
-COPY ./predownloaded/* ${INSTALLER_PATH}
+COPY ./stagedArtifacts/* ${INSTALLER_PATH}/
 
 ##########################################
 # Here comes the GA Install part
@@ -36,26 +40,48 @@ RUN if [ ! -f "${INSTALLER_PATH}/${FILE_SOFTWARE}" ]; \
     fi;
 
 # UNZIP and INSTALL the Pentaho server 
-RUN unzip ${FILE_SOFTWARE}; 
-RUN java -DINSTALL_PATH=${INSTALLATION_PATH} -DEULA_ACCEPT=true -jar ./${FILE_RELEASE_NAME}/installer.jar -options-system; 
+
+RUN if [ ! ${FILE_SOFTWARE} = *"SNAPSHOT"* ]; \
+      then \
+        unzip ${FILE_SOFTWARE}; \
+	    java -DINSTALL_PATH=${INSTALLATION_PATH} -DEULA_ACCEPT=true -jar ./${FILE_RELEASE_NAME}/installer.jar -options-system; \
+	  else \
+	    mkdir -p ${INSTALLATION_PATH}; \
+		unzip ${FILE_SOFTWARE} -d ${INSTALLATION_PATH}; \
+	fi;
 
 # UNZIP and INSTALL plugins
 RUN if [ -f "${FILE_PAZ}" ]; \
     then \
+	  if [ ! ${FILE_SOFTWARE} = *"SNAPSHOT"* ]; \
+      then \
         unzip ${FILE_PAZ}; \
-        java -DINSTALL_PATH=${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system/ -DEULA_ACCEPT=true -jar ./paz-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}/installer.jar -options-system; \
+        java -DINSTALL_PATH=${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system/ -DEULA_ACCEPT=true -jar  ./paz-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}/installer.jar -options-system; \
+      else \
+        unzip ${FILE_PAZ} -d ${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system; \
+      fi; \
     fi;
 
 RUN if [ -f "${FILE_PIR}" ]; \
     then \
-        unzip ${FILE_PIR}; \
-        java -DINSTALL_PATH=${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system/ -DEULA_ACCEPT=true -jar ./pir-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}/installer.jar -options-system; \
+		  if [ ! ${FILE_SOFTWARE} = *"SNAPSHOT"* ]; \
+		  then \
+			  unzip ${FILE_PIR}; \
+			  java -DINSTALL_PATH=${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system/ -DEULA_ACCEPT=true -jar  ./pir-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}/installer.jar -options-system; \
+		  else \
+			  unzip ${FILE_PIR} -d ${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system; \
+		  fi; \
     fi;
 
 RUN if [ -f "${FILE_PDD}" ]; \
     then \
-        unzip ${FILE_PDD}; \
-        java -DINSTALL_PATH=${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system/ -DEULA_ACCEPT=true -jar ./pdd-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}/installer.jar -options-system; \
+		  if [ ! ${FILE_SOFTWARE} = *"SNAPSHOT"* ]; \
+		  then \
+			  unzip ${FILE_PDD}; \
+			  java -DINSTALL_PATH=${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system/ -DEULA_ACCEPT=true -jar  ./pdd-plugin-ee-${PENTAHO_VERSION}-${PENTAHO_PACKAGE_DIST}/installer.jar -options-system; \
+		  else \
+			  unzip ${FILE_PDD} -d ${INSTALLATION_PATH}/pentaho-server/pentaho-solutions/system; \
+		  fi; \
     fi;
 
 
@@ -71,6 +97,7 @@ RUN if [ ! -z "${SERVICE_PACK_VERSION}" ]; then \
     else \
         echo "Standard installation, no SP defined"; \
     fi;
+
 ########################################################################################################################
 # 
 # Since this image is for the GA release, no service pack in this build.
@@ -83,7 +110,7 @@ FROM openjdk:8u282-jdk as pack
 
 RUN apt update; apt install -y libxtst6 libxi6 libxrender1
 
-ARG INSTALLATION_PATH=/opt/pentaho
+ARG INSTALLATION_PATH
 
 # Create unprivileged user
 ENV PENTAHO_UID=5000
@@ -95,6 +122,9 @@ ENV PENTAHO_LICENSE_PATH=
 RUN groupadd --gid ${PENTAHO_UID} ${PENTAHO_USER} \
     && useradd --home-dir ${PENTAHO_HOME} --create-home --uid ${PENTAHO_UID} \
     --gid ${PENTAHO_UID} --shell /bin/bash --skel /dev/null ${PENTAHO_USER}
+
+#Default to Windows host, please override for other cases
+ENV DISPLAY=host.docker.internal:0
 
 #This Setting is to skipe WEB TOOLKIT GTK Check. Since the use of this mack normally does no use GUI.
 # If you want GUI, then istall libwebkitgtk-1.0-0 as the line commented above
@@ -117,3 +147,4 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 EXPOSE 8080
 
 CMD [ "sh", "./tomcat/bin/catalina.sh", "run" ]
+
