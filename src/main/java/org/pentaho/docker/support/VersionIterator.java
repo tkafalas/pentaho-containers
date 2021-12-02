@@ -1,6 +1,5 @@
 package org.pentaho.docker.support;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -18,11 +17,6 @@ public class VersionIterator implements Iterator<String> {
   public VersionIterator( String version ) {
     this.version = version;
     this.pointer = version.length();
-    ArrayList values = new ArrayList<String>();
-    for ( int i = version.length(); i > 0; i-- ) {
-      values.add( version.substring( 0, i ) );
-
-    }
   }
 
   @Override public boolean hasNext() {

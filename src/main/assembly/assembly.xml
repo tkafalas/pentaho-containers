@@ -66,6 +66,7 @@
       <outputDirectory></outputDirectory>
       <includes>
         <include>containers/pentaho-server/pentaho-server-auto/**</include>
+        <include>containers/registry.yml</include>
         <include>containers/local/**</include>
         <include>containers/templates/single-server-auto/**</include>
         <include>containers/templates/README.md</include>

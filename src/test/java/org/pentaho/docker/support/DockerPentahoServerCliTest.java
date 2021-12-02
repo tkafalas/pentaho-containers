@@ -72,7 +72,7 @@ public class DockerPentahoServerCliTest {
       mapper.findAndRegisterModules();
       try {
         dpsr =
-          mapper.readValue( new File( DockerPentahoServerCli.REGISTRY_YAML_FILE ),
+          mapper.readValue( new File( DockerPentahoUtil.REGISTRY_YAML_FILE ),
             DockerPentahoServerRegistry.class );
         System.out.println( dpsr.toString() );
       } catch ( IOException e ) {
