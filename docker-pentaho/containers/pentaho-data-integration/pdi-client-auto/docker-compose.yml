@@ -1,0 +1,40 @@
+version: '3.6'
+
+services:
+  pdi:
+    #stdin_open: true # docker run -i
+    #tty: true        # docker run -t
+    image: pentaho/pdi:${PENTAHO_VERSION:-8.3.0.0}
+    build:
+      context: "./"
+    hostname: pdi
+    #ports:
+      #- "${PORT}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: 4g
+    volumes:
+      #Bindings
+      - "${OVERRIDE_FOLDER}/:/docker-entrypoint-init"
+    environment:
+      - PENTAHO_DI_JAVA_OPTIONS=
+        -Dfile.encoding=utf8
+        -Dpentaho.installed.licenses.file=/run/secrets/pentaho_license
+        -XX:+UseConcMarkSweepGC
+        -XX:+ExplicitGCInvokesConcurrent
+        -XX:+CMSClassUnloadingEnabled
+        -XX:+AggressiveOpts 
+
+    secrets:
+      - pentaho_license
+    command: [ "sh", "./pan.sh", "/file:/opt/pentaho/data-integration/simpleTrans.ktr" ]
+
+#volumes:
+  #repository-data:
+
+secrets:
+  pentaho_license:
+    file: "./local/installedLicenses.xml"
+

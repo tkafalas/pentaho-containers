@@ -1,0 +1,45 @@
+ databaseRegistry:
+   databaseMap:
+     postgres:
+       databaseInstances:
+         - versions: "9.6"
+           edition:
+           composeYml: docker-compose-postgres.yml
+           dbInitFolder: db_init_postgres
+           image: postgres:9.6
+     mysql:
+       databaseInstances:
+         - versions: "5.7,8.0"
+           edition:
+           composeYml: docker-compose-mysql.yml
+           dbInitFolder: db_init_mysql
+           image: mysql/mysql-server:${DATABASE_VERSION}
+     oracle:
+       databaseInstances:
+         - versions: latest
+           edition: ent
+           composeYml: docker-compose-oracle.yml
+           dbInitFolder: db_init_oracle
+           image: container-registry.oracle.com/database/enterprise
+         - versions: latest
+           edition: ex
+           composeYml: docker-compose-oracle.yml
+           dbInitFolder: db_init_oracle
+           image: container-registry.oracle.com/database/express
+ karFileRegistry:
+   karFiles:
+   - cdh61
+   - cdpdc71
+   - dataproc1421
+   - emr521
+   - hdi40
+   - hdp30
+   - mapr61
+ buildRegistry:
+   versionMap:
+     8:
+       javaVersions: openjdk:8
+       karFilesInstalledSeparately: false
+     9:
+       javaVersions: openjdk:8,openjdk:11
+       karFilesInstalledSeparately: true

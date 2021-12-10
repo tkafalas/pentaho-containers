@@ -1,0 +1,51 @@
+version: '3.6'
+
+services:
+  pentahoServer:
+    image: pentaho/pentaho-server:${PENTAHO_VERSION:-8.3.0.0}
+    build:
+      context: "./"
+    hostname: pentahoServer
+    ports:
+      - "${PORT}:8080"
+      #- "8044:8044"
+      #- "9001:9001"
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: 5g
+    volumes:
+      #Bindings
+      - "${OVERRIDE_FOLDER}/:/docker-entrypoint-init"
+    environment:
+      - CATALINA_OPTS=>-
+        -Dfile.encoding=utf8
+        -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8044
+        -Dpentaho.installed.licenses.file=/run/secrets/pentaho_license
+        -XX:+UseConcMarkSweepGC
+        -XX:+ExplicitGCInvokesConcurrent
+        -XX:+CMSClassUnloadingEnabled
+        -XX:+AggressiveOpts
+        -Xmx4g
+    secrets:
+      - pentaho_license
+    #depends_on:
+    #  - repository
+
+  repository:
+    image: postgres:${DATABASE_VERSION}
+    environment:
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - "./db_init_postgres/:/docker-entrypoint-initdb.d/"
+      - repository-data:/var/lib/postgresql/data
+
+volumes:
+  repository-data:
+  server_jackrabbit:
+
+secrets:
+  pentaho_license:
+    file: "./local/installedLicenses.xml"
+

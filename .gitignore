@@ -20,3 +20,5 @@ kubernetes/pentaho-server/mssql*
 target/
 .idea/
 containers/local/installedLicenses.xml
+pentaho-containers.iml
+mock-installer/mock-installer.iml
