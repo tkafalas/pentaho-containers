@@ -50,7 +50,7 @@
         <executions>
           <execution>
             <id>pkg</id>
-            <phase>process-resources</phase>
+            <phase>package</phase>
             <goals>
               <goal>single</goal>
             </goals>
@@ -61,6 +61,8 @@
           <descriptors>
             <descriptor>${basedir}/src/main/assembly/assembly.xml</descriptor>
           </descriptors>
+          <finalName>${final.name}</finalName>
+          <appendAssemblyId>false</appendAssemblyId>
         </configuration>
       </plugin>
     </plugins>

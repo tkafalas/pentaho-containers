@@ -10,6 +10,7 @@
   <version>9.3.0.0-SNAPSHOT</version>
   <modules>
     <module>mock-installer</module>
+    <!--<module>mock-sp</module>-->
     <module>docker-pentaho</module>
   </modules>
 
@@ -29,16 +30,6 @@
   </properties>
 
   <dependencies>
-    <!--<dependency>
-        <groupId>pentaho</groupId>
-        <artifactId>mock-installer</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>pentaho</groupId>
-        <artifactId>docker-pentaho</artifactId>
-        <version>${project.version}</version>
-     </dependency>-->
   </dependencies>
 
   <build>
@@ -62,8 +53,8 @@
             <descriptors>
               <descriptor>${basedir}/src/main/assembly/assembly.xml</descriptor>
             </descriptors>
-            <finalName>${final.name}</finalName>
-            <appendAssemblyId>false</appendAssemblyId>
+            <!--<finalName>${final.name}</finalName>
+            <appendAssemblyId>false</appendAssemblyId>-->
           </configuration>
         </plugin>
       </plugins>

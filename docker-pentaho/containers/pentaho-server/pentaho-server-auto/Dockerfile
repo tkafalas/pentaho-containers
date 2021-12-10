@@ -101,7 +101,7 @@ RUN if [ ! -z "${SERVICE_PACK_VERSION}" ]; then \
 ########################################################################################################################
 # 
 # Since this image is for the GA release, no service pack in this build.
-FROM openjdk:8u282-jdk as pack
+FROM ${JAVA_VERSION} as pack
 
 #FROM ubuntu:latest
 #RUN apt-get update; \

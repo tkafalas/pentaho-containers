@@ -1,5 +1,6 @@
 package org.pentaho.docker.support;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -8,9 +9,10 @@ import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
 import java.io.File;
-import java.nio.file.Files;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.spy;
 
 public class DockerPentahoServerServiceTest {
@@ -42,11 +44,22 @@ public class DockerPentahoServerServiceTest {
   @Test
   public void testHappyPath() throws Exception {
     outputBanner( "testHappyPath" );
+
+    CliPentahoVersion pentahoVersion = new CliPentahoVersion( "noarg", PENTAHO_VERSION );
+    CliPentahoVersion patchVersion = new CliPentahoVersion( "noarg", PATCH_VERSION );
+    String expandedVersion =
+      pentahoVersion.edition + "-" + pentahoVersion.versionNumber + "-" + pentahoVersion.distributionNumber;
+    makeMockInstaller( "pentaho-server-" + expandedVersion, "pdd-plugin-" + expandedVersion, false );
+    makeMockInstaller( "pentaho-server-" + expandedVersion, "paz-plugin-" + expandedVersion,false );
+    makeMockInstaller( "pentaho-server-" + expandedVersion, "pir-plugin-" + expandedVersion,false );
+    //makeMockInstaller( "pentaho-server-" + expandedVersion, "PentahoServer-SP-" +
+        //patchVersion.versionNumber + "-" + patchVersion.distributionNumber, true );
+
     DockerPentahoServerParams.Builder builder = new DockerPentahoServerParams.Builder( true, PENTAHO_VERSION )
       .eulaAccept( true )
       .useExistingDownloads( true )
-      .combinedPlugins( "std" )
-      .combinedPatchVersion( PATCH_VERSION );
+      .combinedPlugins( "std" );
+      //.combinedPatchVersion( PATCH_VERSION );
 
     DockerPentahoServerParams params = new DockerPentahoServerParams( builder );
     DockerPentahoServerService dockerPentahoServerService = new DockerPentahoServerService( params );
@@ -57,12 +70,12 @@ public class DockerPentahoServerServiceTest {
     assert ( new File( generatedFiles + "/Dockerfile" ).exists() );
     assert ( new File( generatedFiles + "/docker-compose.yml" ).exists() );
     assert ( new File( generatedFiles + "/stagedArtifacts" ).exists() );
-    assertEquals ( 5, new File( generatedFiles + "/stagedArtifacts" ).listFiles().length );
+    assertEquals( 4, new File( generatedFiles + "/stagedArtifacts" ).listFiles().length );
 
     if ( IS_WINDOWS ) {
-      String command = "docker build -f " + absolutePath + "/Dockerfile -t pentaho/test-image-do-not-use " + absolutePath;
+      String command =
+        "docker build -f " + absolutePath + "/Dockerfile -t pentaho/test-image-do-not-use " + absolutePath;
       DockerPentahoUtil.runCommand( command, false, true );
-      //docker build -f C:\env\ws\pentaho-containers\docker-pentaho\target/generatedFiles/Dockerfile -t pentaho/pentaho-server:9.2.2.3p C:\env\ws\pentaho-containers\docker-pentaho\target/generatedFiles
     }
   }
 
@@ -122,6 +135,31 @@ public class DockerPentahoServerServiceTest {
     DockerPentahoServerParams params = new DockerPentahoServerParams( builder );
     DockerPentahoServerService dockerPentahoServerService = new DockerPentahoServerService( params );
     dockerPentahoServerService.executeService();
+  }
+
+  private void makeMockInstaller( String sourceZipFile, String destZipFile, boolean isSP ) throws IOException {
+    final String tempFolder = "target/tmp";
+    File t = new File( tempFolder );
+    if ( t.exists() ) {
+      FileUtils.deleteDirectory( t );
+    }
+    DockerPentahoUtil.unzip( "target/artifactCache/mock-" + sourceZipFile + "-dist.zip", tempFolder );
+    //rename the folder
+    File dir = new File( tempFolder + "/" + sourceZipFile );
+    if ( !dir.isDirectory() ) {
+      fail( "There is no directory at the given path " + sourceZipFile );
+    } else {
+      File newDir = new File( dir.getParent() + "/" + destZipFile );
+      dir.renameTo( newDir );
+    }
+    //zip it up
+    if ( isSP ){
+      DockerPentahoUtil.zipDirectory( "target/artifactCache/mock-" + destZipFile + ".bin",
+        tempFolder + "/" + destZipFile );
+    } else {
+      DockerPentahoUtil.zipDirectory( "target/artifactCache/mock-" + destZipFile + "-dist.zip",
+        tempFolder + "/" + destZipFile );
+    }
   }
 
   private void outputBanner( String title ) {

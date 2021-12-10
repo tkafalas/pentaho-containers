@@ -16,6 +16,7 @@ public class DockerPentahoServerParams {
   private String password;
   private boolean execute;
   private boolean eulaAccept;
+  private String javaVersion;
 
   /**
    * Encapsulates all params for DockerPentahoServerCli and DockerPentahoServerService
@@ -37,6 +38,7 @@ public class DockerPentahoServerParams {
     this.password = builder.password;
     this.execute = builder.execute;
     this.eulaAccept = builder.eulaAccept;
+    this.javaVersion = builder.javaVersion;
   }
 
   public boolean isAsService() {
@@ -102,8 +104,6 @@ public class DockerPentahoServerParams {
   public String getJavaVersion() {
     return javaVersion;
   }
-
-  private String javaVersion;
 
   public static class Builder {
     private boolean asService;

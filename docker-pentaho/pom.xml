@@ -165,7 +165,7 @@
             <goals>
               <goal>copy</goal>
             </goals>
-            <phase>package</phase>
+            <phase>process-resources</phase>
             <configuration>
               <artifactItems>
                 <artifactItem>
