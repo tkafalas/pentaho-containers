@@ -177,38 +177,6 @@
                   <outputDirectory>target/artifactCache</outputDirectory>
                   <destFileName>mock-pentaho-server-${test.edition}-${test.version.number}-${test.dist.number}-dist.zip</destFileName>
                 </artifactItem>
-                <!--<artifactItem>
-                  <groupId>pentaho</groupId>
-                  <artifactId>mock-installer</artifactId>
-                  <version>${project.version}</version>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>target/artifactCache</outputDirectory>
-                  <destFileName>mock-pdd-plugin-${test.edition}-${test.version.number}-${test.dist.number}-dist.zip</destFileName>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>pentaho</groupId>
-                  <artifactId>pentaho-server-ee-9.2.2.2-998.zip</artifactId>
-                  <version>${project.version}</version>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>target/artifactCache</outputDirectory>
-                  <destFileName>mock-paz-plugin-${test.edition}-${test.version.number}-${test.dist.number}-dist.zip</destFileName>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>pentaho</groupId>
-                  <artifactId>pentaho-server-ee-9.2.2.2-998.zip</artifactId>
-                  <version>${project.version}</version>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>target/artifactCache</outputDirectory>
-                  <destFileName>mock-pir-plugin-${test.edition}-${test.version.number}-${test.dist.number}-dist.zip</destFileName>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>pentaho</groupId>
-                  <artifactId>mock-installer</artifactId>
-                  <version>${project.version}</version>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>target/artifactCache</outputDirectory>
-                  <destFileName>mock-PentahoServer-SP-9.2.2.3-999.bin</destFileName>
-                </artifactItem>-->
               </artifactItems>
             </configuration>
           </execution>

@@ -111,6 +111,7 @@ FROM ${JAVA_VERSION} as pack
 RUN apt update; apt install -y libxtst6 libxi6 libxrender1
 
 ARG INSTALLATION_PATH
+ARG JAVA_VERSION
 
 # Create unprivileged user
 ENV PENTAHO_UID=5000

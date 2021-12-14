@@ -6,14 +6,12 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.spy;
 
 public class DockerPentahoServerServiceTest {
   private static final String LINE = StringUtils.repeat( "-", 80 );
@@ -75,6 +73,8 @@ public class DockerPentahoServerServiceTest {
     if ( IS_WINDOWS ) {
       String command =
         "docker build -f " + absolutePath + "/Dockerfile -t pentaho/test-image-do-not-use " + absolutePath;
+      DockerPentahoUtil.runCommand( command, false, true );
+      command = "docker image rm pentaho/test-image-do-not-use";
       DockerPentahoUtil.runCommand( command, false, true );
     }
   }
