@@ -2,11 +2,11 @@
    databaseMap:
      postgres:
        databaseInstances:
-         - versions: "9.6"
+         - versions: "9.6,13.5"
            edition:
            composeYml: docker-compose-postgres.yml
            dbInitFolder: db_init_postgres
-           image: postgres:9.6
+           image: postgres:${DATABASE_VERSION}
      mysql:
        databaseInstances:
          - versions: "5.7,8.0"

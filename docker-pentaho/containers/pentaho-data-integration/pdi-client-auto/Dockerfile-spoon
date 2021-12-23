@@ -38,7 +38,7 @@ RUN if [ ! -f "${INSTALLER_PATH}/$FILE_SOFTWARE" ]; \
         echo "File $FILE_SOFTWARE Not Found in predownloaded, please download and copy to predownloaded folder"; exit 2; \
         fi;
 
-# UNZIP and INSNTALL the Pentaho Client
+# UNZIP and INSNTALL the Pentaho Client 
 RUN if [ ! ${FILE_SOFTWARE} = *"SNAPSHOT"* ]; \
     then \
       unzip ${FILE_SOFTWARE}; \
@@ -70,13 +70,15 @@ RUN if [ ! -z "${SERVICE_PACK_VERSION}" ]; then \
 ##################################################################################################
 # Here is where we create the final image                                                        #
 ##################################################################################################
+
 FROM ${JAVA_VERSION} as pack
 
 # In case of Ubuntu we need to install a few things...
-#FROM ubuntu:latest
-#RUN apt-get update; \
-#     apt-get install -y libwebkitgtk-1.0-0; \
-#     apt-get install -y openjdk-8-jre;
+# Must go back to version 18 to get libwebkitgtk-1.0-0
+FROM ubuntu:18.04
+RUN apt-get update; \
+     apt-get install -y libwebkitgtk-1.0-0; \
+     apt-get install -y openjdk-8-jre;
 
 #Arguments
 ARG INSTALLATION_PATH=/opt/pentaho
@@ -84,7 +86,7 @@ ARG INSTALLATION_PATH=/opt/pentaho
 # Create unprivileged user
 ENV PENTAHO_UID=5000
 ENV PENTAHO_USER=pentaho
-ENV PENTAHO_HOME=/home/pentaho
+ENV PENTAHO_HOME=/home/pentaho 
 ENV PENTAHO_LICENSE_PATH=
 
 # Create user for non-root account
@@ -93,11 +95,11 @@ RUN groupadd --gid ${PENTAHO_UID} ${PENTAHO_USER} \
     --gid ${PENTAHO_UID} --shell /bin/bash --skel /dev/null ${PENTAHO_USER}
 
 #Default to Windows host, please override for other cases
-#ENV DISPLAY=host.docker.internal:0
+ENV DISPLAY=host.docker.internal:0
 
 #This Setting is to skipe WEB TOOLKIT GTK Check. Since the use of this mack normally does no use GUI.
 # If you want GUI, then istall libwebkitgtk-1.0-0 as the line commented above
-ENV SKIP_WEBKITGTK_CHECK=1
+#ENV SKIP_WEBKITGTK_CHECK=1
 
 COPY --from=install_unpack  ${INSTALLATION_PATH}/data-integration/ ${INSTALLATION_PATH}/data-integration/
 
@@ -111,9 +113,9 @@ RUN chown -R pentaho:root ${INSTALLATION_PATH}
 WORKDIR ${INSTALLATION_PATH}/data-integration
 
 #Setup JVM level parameters/variables
-ENV PENTAHO_DI_JAVA_OPTIONS="-Dfile.encoding=utf8 -Dpentaho.installed.licenses.file=${INSTALLATION_PATH}/pentahoLicense/installedLicenses.xml -XX:+UseConcMarkSweepGC -XX:+ExplicitGCInvokesConcurrent -XX:+CMSClassUnloadingEnabled -XX:+AggressiveOpts"
-# WARNING carefull with the below options, REMOVED from default,
-#         because if the Container does not have memory limits,
+ENV PENTAHO_DI_JAVA_OPTIONS="-Dfile.encoding=utf8 -Dpentaho.installed.licenses.file=${INSTALLATION_PATH}/pentahoLicense/installedLicenses.xml -XX:+UseConcMarkSweepGC -XX:+ExplicitGCInvokesConcurrent -XX:+CMSClassUnloadingEnabled -XX:+AggressiveOpts" 
+# WARNING carefull with the below options, REMOVED from default, 
+#         because if the Container does not have memory limits, 
 #         then it can use all the host memory.
 # -XX:MinRAMPercentage=60.0 -XX:MaxRAMPercentage=90.0
 

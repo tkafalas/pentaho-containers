@@ -1,15 +1,15 @@
 version: '3.6'
 
 services:
-  carte:
-    #stdin_open: true # docker run -i
-    #tty: true        # docker run -t
-    image: pentaho/carte:${PENTAHO_VERSION:-8.3.0.0}
+  spoon:
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    image: pentaho/spoon:${PENTAHO_VERSION:-8.3.0.0}
     build:
       context: "./"
-    hostname: carte
-    ports:
-      - "${PORT}:8082"
+    hostname: spoon
+    #ports:
+      #- "${PORT}:8080"
     deploy:
       resources:
         limits:
@@ -25,15 +25,16 @@ services:
         -XX:+UseConcMarkSweepGC
         -XX:+ExplicitGCInvokesConcurrent
         -XX:+CMSClassUnloadingEnabled
-        -XX:+AggressiveOpts
+        -XX:+AggressiveOpts 
 
     secrets:
       - pentaho_license
-    command: [ "sh", "./carte.sh", "carte-config.xml" ]
+    command: [ "sh", "./spoon.sh" ]
 
-  #volumes:
+#volumes:
   #repository-data:
 
 secrets:
   pentaho_license:
     file: "./local/installedLicenses.xml"
+

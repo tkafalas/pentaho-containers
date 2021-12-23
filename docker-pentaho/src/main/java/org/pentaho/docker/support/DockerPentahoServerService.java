@@ -60,7 +60,7 @@ import static org.pentaho.docker.support.DockerPentahoUtil.runCommand;
  */
 public class DockerPentahoServerService {
   protected static final String[] KNOWN_PLUGINS = { "paz", "pdd", "pir" };
-  protected static final List<String> VALID_PRODUCT_TYPES = Arrays.asList( "server", "pdi", "carte" );
+  protected static final List<String> VALID_PRODUCT_TYPES = Arrays.asList( "server", "pdi", "carte", "spoon" );
   protected static final String DEFAULT_INSTALL_PATH = "/opt/pentaho";
   protected static final String GENERATED_ROOT_FOLDER = "generatedFiles";
 
@@ -205,7 +205,7 @@ public class DockerPentahoServerService {
     try {
       process();
     } catch ( DockerPentahoException e ) {
-        throw new DockerPentahoException(e);
+      throw new DockerPentahoException( e );
     } catch ( Exception e ) {
       errorOut( "Unanticipated exception", e );
     }
@@ -269,7 +269,8 @@ public class DockerPentahoServerService {
     setupFinalOverrideFolder();
 
     //Modify and stage the docker file for the server
-    dockerFile = readAnyFile( activeImageRootFolder + "Dockerfile" );
+    String sourceDockerfile = productType.equals("spoon") ? "Dockerfile-spoon" : "Dockerfile";
+    dockerFile = readAnyFile( activeImageRootFolder + sourceDockerfile );
     modifyDockerFile();
     writeAnyFile( generatedFolder + "/Dockerfile", dockerFile );
 
@@ -471,7 +472,7 @@ public class DockerPentahoServerService {
     if ( isServer() ) {
       sourceFilename = "docker-compose-" + getDatabaseType() + ".yml";
     } else {
-      sourceFilename = productType.equals( "carte" ) ? "docker-compose-carte.yml" : "docker-compose.yml";
+      sourceFilename = "docker-compose-" + productType + ".yml";
     }
 
     Path source = Paths.get( activeComposeRootFolder + sourceFilename );
@@ -506,7 +507,7 @@ public class DockerPentahoServerService {
     if ( isServer() ) {
       command.append( " -t pentaho/pentaho-server:" );
     } else {
-      command.append( " -t pentaho/pdi:" );
+      command.append( " -t pentaho/" + productType + ":" );
     }
     command.append( computeFinalVersion() );
     command.append( " " ).append( generatedFolder );
