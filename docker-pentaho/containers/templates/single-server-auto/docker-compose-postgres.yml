@@ -16,8 +16,8 @@ services:
           cpus: '3'
           memory: 5g
     volumes:
-      #Bindings
       - "${OVERRIDE_FOLDER}/:/docker-entrypoint-init"
+      #AdditionalVolumePlaceholder-Do not modify this line.
     environment:
       - CATALINA_OPTS=>-
         -Dfile.encoding=utf8

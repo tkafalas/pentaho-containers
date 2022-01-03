@@ -30,6 +30,7 @@ public class DockerPentahoServerCli {
   private static final String EXECUTE_ARGUMENT = "execute";
   private static final String EULA_ACCEPT_ARGUMENT = "EULA_ACCEPT";
   private static final String JAVA_VERSION_ARGUMENT = "java-version";
+  private static final String METASTORE_ARGUMENT = "metastore";
   private static ExceptionHandler exceptionHandler;
 
   private static DockerPentahoServerRegistry dockerPentahoServerRegistry =
@@ -68,6 +69,7 @@ public class DockerPentahoServerCli {
     boolean execute = commandLine.hasOption( EXECUTE_ARGUMENT );
     String eulaValue = commandLine.getOptionValue( EULA_ACCEPT_ARGUMENT );
     String javaVersion = commandLine.getOptionValue( JAVA_VERSION_ARGUMENT );
+    String metastore = commandLine.getOptionValue( METASTORE_ARGUMENT );
     if ( eulaValue != null ) {
       eulaValue = eulaValue.trim().toLowerCase();
     }
@@ -90,6 +92,7 @@ public class DockerPentahoServerCli {
         .execute( execute )
         .eulaAccept( eulaAccept )
         .javaVersion( javaVersion )
+        .metastore( metastore )
         .build();
 
       new DockerPentahoServerService( dockerPentahoServerParams ).executeService();
@@ -226,6 +229,13 @@ public class DockerPentahoServerCli {
       .desc( "The java version desired.  Care should be taken to use a java version that is compatible with"
         + " the image being built." )
       .build();
+    Option optMetastore = Option.builder( "M" )
+      .longOpt( METASTORE_ARGUMENT )
+      .hasArg( true )
+      .desc( "Contains the path to a local folder that will be mounted as the metastore.  This folder will be kept in"
+        + " with the one on the container, so any metastore changes made in the container will persist in the local"
+        + " file." )
+      .build();
 
     Options options = new Options();
     options.addOption( optPentahoVersion );
@@ -243,6 +253,7 @@ public class DockerPentahoServerCli {
     options.addOption( optExecute );
     options.addOption( optEulaAccept );
     options.addOption( optJavaVersion );
+    options.addOption( optMetastore );
     return options;
   }
 

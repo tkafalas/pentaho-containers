@@ -1,7 +1,6 @@
 package org.pentaho.docker.support;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 import org.pentaho.di.core.util.StringUtil;
@@ -27,11 +26,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -42,15 +38,12 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import static org.pentaho.di.core.util.StringUtil.isEmpty;
 import static org.pentaho.docker.support.DockerPentahoUtil.runCommand;
@@ -94,6 +87,7 @@ public class DockerPentahoServerService {
   private static final String ENTRY_POINT_FILE_LOCATION = "entrypoint/docker-entrypoint.sh";
   private static final boolean IS_WINDOWS = System.getProperty( "os.name" ).toLowerCase().contains( "win" );
   private static final String COULD_NOT_COPY = "Could not copy ";
+  private static final String VOLUME_INJECT_PLACEHOLDER = "#AdditionalVolumePlaceholder-Do not modify this line.";
 
   //The parameter values for the command line
   private String installPath = DEFAULT_INSTALL_PATH;
@@ -111,6 +105,7 @@ public class DockerPentahoServerService {
   private String javaVersion;
   private CliPentahoVersion cliPentahoVersion;
   private CliPentahoVersion cliPatchVersion;
+  private final String metastore;
 
   //processing
   private ExceptionHandler exceptionHandler;
@@ -162,6 +157,7 @@ public class DockerPentahoServerService {
     this.execute = params.isExecute();
     this.eulaAccept = params.isEulaAccept();
     this.javaVersion = params.getJavaVersion();
+    this.metastore = params.getMetastore();
 
     //make sure the port is number
     int p = 0;
@@ -269,7 +265,7 @@ public class DockerPentahoServerService {
     setupFinalOverrideFolder();
 
     //Modify and stage the docker file for the server
-    String sourceDockerfile = productType.equals("spoon") ? "Dockerfile-spoon" : "Dockerfile";
+    String sourceDockerfile = productType.equals( "spoon" ) ? "Dockerfile-spoon" : "Dockerfile";
     dockerFile = readAnyFile( activeImageRootFolder + sourceDockerfile );
     modifyDockerFile();
     writeAnyFile( generatedFolder + "/Dockerfile", dockerFile );
@@ -302,13 +298,13 @@ public class DockerPentahoServerService {
     //Install pentaho License Information
     installLicenseFile();
 
-    createDockerComposeYml();
+    createDockerComposeYmlFile();
 
-    //Create the docker image
-    createDockerImage();
+    //Create the docker image command and possibly run it
+    createDockerImageCommand();
 
     //do a docker compose
-    createDockerCompose();
+    createDockerComposeCommand();
 
   }
 
@@ -467,7 +463,7 @@ public class DockerPentahoServerService {
     }
   }
 
-  private void createDockerComposeYml() throws DockerPentahoException {
+  private void createDockerComposeYmlFile() throws DockerPentahoException {
     String sourceFilename;
     if ( isServer() ) {
       sourceFilename = "docker-compose-" + getDatabaseType() + ".yml";
@@ -483,14 +479,40 @@ public class DockerPentahoServerService {
       errorOut( COULD_NOT_COPY + "file \"" + source.toAbsolutePath() + "\" to \"" + destination.toAbsolutePath() + "\"",
         e );
     }
+    //Now modify the file if a metastore volume is in play
+    addVolumesToYaml( destination.toAbsolutePath().toString() );
+  }
+
+  private void addVolumesToYaml( String pathToFile ) throws DockerPentahoException {
+    if ( metastore != null ) {
+      try {
+        String fileContents = readAnyFile( pathToFile );
+        int startPos = fileContents.indexOf( VOLUME_INJECT_PLACEHOLDER ) + 1;
+        int indentPos = fileContents.substring( 0, startPos ).lastIndexOf( "\n" );
+        String indent = fileContents.substring( indentPos, startPos - 1 );
+        String volumeInject = indent + "- \"" + metastore + "/:/home/pentaho\"";
+        fileContents = fileContents.substring( 0, indentPos ) + volumeInject + fileContents.substring(
+          indentPos + VOLUME_INJECT_PLACEHOLDER.length() + indent.length() );
+        writeAnyFile( pathToFile, fileContents );
+      } catch ( DockerPentahoException e ) {
+        errorOut( "Could not read file " + pathToFile, e);
+      } catch ( IOException e ){
+        errorOut( "Could not write file " + pathToFile, e );
+      }
+    }
   }
 
   private String getDatabaseType() {
     return database.substring( 0, database.indexOf( "/" ) );
   }
 
-  private void createDockerCompose() throws DockerPentahoException {
+  private String getComposeServiceName() {
+    return isServer() ? "pentahoServer" : productType;
+  }
+
+  private void createDockerComposeCommand() throws DockerPentahoException {
     String command = IS_WINDOWS ? "docker compose up" : "sudo docker-compose up";
+
     if ( execute ) {
       runCommand( command, false, true, generatedFolder );
     } else {
@@ -498,7 +520,7 @@ public class DockerPentahoServerService {
     }
   }
 
-  private void createDockerImage() throws DockerPentahoException {
+  private void createDockerImageCommand() throws DockerPentahoException {
     StringBuilder command = new StringBuilder( IS_WINDOWS ? "" : "sudo " );
     command.append( "docker build -f " ).append( generatedFolder ).append( "/Dockerfile" );
     if ( noCache ) {

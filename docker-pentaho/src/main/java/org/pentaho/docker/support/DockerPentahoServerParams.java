@@ -17,9 +17,11 @@ public class DockerPentahoServerParams {
   private boolean execute;
   private boolean eulaAccept;
   private String javaVersion;
+  private String metastore;
 
   /**
    * Encapsulates all params for DockerPentahoServerCli and DockerPentahoServerService
+   *
    * @param builder A DockerPentahoServerParms.Builder object
    */
   DockerPentahoServerParams( DockerPentahoServerParams.Builder builder ) {
@@ -39,6 +41,7 @@ public class DockerPentahoServerParams {
     this.execute = builder.execute;
     this.eulaAccept = builder.eulaAccept;
     this.javaVersion = builder.javaVersion;
+    this.metastore = builder.metastore;
   }
 
   public boolean isAsService() {
@@ -105,6 +108,10 @@ public class DockerPentahoServerParams {
     return javaVersion;
   }
 
+  public String getMetastore() {
+    return metastore;
+  }
+
   public static class Builder {
     private boolean asService;
     private String combinedPentahoVersion;
@@ -122,6 +129,7 @@ public class DockerPentahoServerParams {
     private boolean execute;
     private boolean eulaAccept;
     private String javaVersion;
+    private String metastore;
 
     public Builder( boolean asService, String combinedPentahoVersion ) throws CommandLineSyntaxException {
       this.asService = asService;
@@ -203,8 +211,13 @@ public class DockerPentahoServerParams {
       return this;
     }
 
-    public Builder javaVersion( String javaVersion ){
+    public Builder javaVersion( String javaVersion ) {
       this.javaVersion = javaVersion;
+      return this;
+    }
+
+    public Builder metastore( String metastore ) {
+      this.metastore = metastore;
       return this;
     }
   }
